@@ -1,0 +1,31 @@
+#' Longitudinal health data of 1065 children from age 6 to 15.
+#'
+#' A dataset containing the demographic and health related data of 1065
+#' children.
+#'
+#'@usage data(outchild)
+#'@format A data frame with 6681 rows and 21 variables:
+#' \describe{
+#'   \item{SID}{Child ID}
+#'   \item{SEX}{1=male,2=female}
+#'   \item{RACE}{1=white,2=black}
+#'   \item{WEIGHT}{Weight of the child}
+#'   \item{HEIGHT}{Height of the child}
+#'   \item{age}{Age of a child}
+#'   \item{dias}{Diastolic blood pressure}
+#'   \item{sys}{Systolic blood pressure}
+#'   \item{heartrate}{Heart rate}
+#'   \item{pulse}{Blood pulse}
+#'   \item{BMI}{Body Mass Index (BMI)}
+#'   \item{HeightZ}{Normalized height}
+#'   \item{HeightPct}{Percentile of height over standardized population}
+#'   \item{WeightZ}{Normalized weight}
+#'   \item{WeightPct}{Percentile of weight over standardized population}
+#'   \item{BMIZ}{Normalized BMI}
+#'   \item{BMIPCT}{Percentile of BMI over standardized population}
+#'   \item{SBPpct}{Systolic blood pressure percentile}
+#'   \item{DBPpct}{Diastolic blood pressure percentile}
+#'   \item{HTN_ANY}{1=Hypertension 0=No hypertension}
+#'   \item{HTNpre_ANY}{1=Pre-hypertension 0=No pre-hypertension}
+#' }
+"outchild"
