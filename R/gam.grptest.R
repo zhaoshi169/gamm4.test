@@ -71,6 +71,7 @@ wild.boot <- function(x, nboot=1){
 #'plot(t1)
 #'
 #'########
+#'\dontrun{
 #'## Semiparametric test the equality for regression surfaces
 #'## Simulate data sets
 #'
@@ -104,8 +105,26 @@ wild.boot <- function(x, nboot=1){
 #'plot(tspl, test.statistic = TRUE)
 #'plot(tspl, type="contour")
 #'plot(tspl, type="persp")
-#'plot(tspl, type="plotly.persp")
+#'plot(tspl, type="plotly.persp")}
 #'
+#'########
+#'## Data analyses with internal "outchild" dataset
+#'
+#'data("outchild")
+#'child<- outchild[order(outchild$SID,outchild$age),]
+#'bs <- aggregate(.~SID, child, FUN=head, 1)
+#'
+#'childcur <- bs[,c("SEX","WEIGHT","age")]
+#'test.grpsex1 <- gam.grptest(WEIGHT~s(age),test=~SEX,data=childcur)
+#'test.grpsex1
+#'plot(test.grpsex1)
+#'plot(test.grpsex1,test.statistic=TRUE)
+#'
+#'childsurf <- bs[,c("SEX","HEIGHT","WEIGHT","age")]
+#'test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age),test=~SEX,data=childsurf)
+#'test.grpsex2
+#'plot(test.grpsex2)
+#'plot(test.grpsex2,type="plotly.persp")
 #'@export
 
 gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
@@ -408,7 +427,7 @@ gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
 #'@seealso \code{\link{gam.grptest}}
 #'@import stats
 #'@import mgcv
-#'@examples \dontrun{
+#'@examples 
 #'n1 <- 200
 #'x1 <- runif(n1,min=0, max=3)
 #'sd1 <- 0.2
@@ -455,25 +474,6 @@ gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
 #'colnames(data.bind)=c('x1','x2', 'y','group')
 #'
 #'T.L2c(formula=y~x1+x2,test=~group,data=data.bind)
-#'
-#'#'########
-#'## Data analyses with internal "outchild" dataset
-#'
-#'data("outchild")
-#'child<- outchild[order(outchild$SID,outchild$age),]
-#'bs <- aggregate(.~SID, child, FUN=head, 1)
-#'
-#'childcur <- bs[,c("SEX","WEIGHT","age")]
-#'test.grpsex1 <- gam.grptest(WEIGHT~s(SEX),test=~SEX,data=childcur)
-#'test.grpsex1
-#'plot(test.grpsex1)
-#'plot(test.grpsex1,test.statistic=TRUE)
-#'
-#'childsurf <- bs[,c("SEX","BMI","WEIGHT","age")]
-#'test.grpsex2 <- gam.grptest(y~s(BMI,WEIGHT),test=~SEX,data=childsurf)
-#'test.grpsex2
-#'plot(test.grpsex2)
-#'plot(test.grpsex2,type="plotly.persp")}
 #'@export
 
 T.L2c <- function(formula,test,data,N.boot=200,degree=1, criterion=c("aicc", "gcv"),

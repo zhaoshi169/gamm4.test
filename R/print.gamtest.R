@@ -8,9 +8,15 @@
 print.gamtest <- function (x, digits = 4, ...){
   data.bind <- x$data
   colnames(data.bind)=x$mydataname
-  if (length(names(data.bind)[grep("x",names(data.bind))]) == 1)
-  {curve.surface <- "curves"; curve.surface2 <- "curve"} else {curve.surface <- "surfaces"; curve.surface2 <- "surface"}
+
   if (x$fcn == "gam.grptest"){
+    if (ncol(x$data)==3) {
+      curve.surface <- "curves"
+      curve.surface2 <- "curve"
+    }else {
+      curve.surface <- "surfaces"
+      curve.surface2 <- "surface"
+    }
     cat("\n")
     cat(strwrap(x$method, prefix = "\t"), sep="\n")
     cat("\n")
@@ -23,6 +29,13 @@ print.gamtest <- function (x, digits = 4, ...){
     cat("\n")
     invisible(x)
   }else if(x$fcn == "T.L2c"){
+    if (ncol(x$data)==3) {
+      curve.surface <- "curves"
+      curve.surface2 <- "curve"
+    }else {
+      curve.surface <- "surfaces"
+      curve.surface2 <- "surface"
+    }
     cat("\n")
     cat(strwrap(x$method, prefix = "\t"), sep="\n")
     cat("\n")
@@ -35,6 +48,13 @@ print.gamtest <- function (x, digits = 4, ...){
     cat("\n")
     invisible(x)
   }else if (x$fcn == "gamm4.grptest"){
+    if (ncol(x$data)==4) {
+      curve.surface <- "curves"
+      curve.surface2 <- "curve"
+    }else {
+      curve.surface <- "surfaces"
+      curve.surface2 <- "surface"
+    }
     cat("\n")
     cat(strwrap(x$method, prefix = "\t"), sep="\n")
     cat("\n")

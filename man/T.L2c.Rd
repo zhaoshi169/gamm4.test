@@ -47,7 +47,6 @@ The problem can also be viewed as the test of the equality in the one-sample pro
 A bootstrap algorithm is applied to test the equality of semiparametric curves or surfaces based on L2 distance.
 }
 \examples{
-\dontrun{
 n1 <- 200
 x1 <- runif(n1,min=0, max=3)
 sd1 <- 0.2
@@ -94,25 +93,6 @@ data.bind <- data.frame(rbind(cbind(x11, x12 ,y1,1), cbind(x21, x22, y2,2), cbin
 colnames(data.bind)=c('x1','x2', 'y','group')
 
 T.L2c(formula=y~x1+x2,test=~group,data=data.bind)
-
-#'########
-## Data analyses with internal "outchild" dataset
-
-data("outchild")
-child<- outchild[order(outchild$SID,outchild$age),]
-bs <- aggregate(.~SID, child, FUN=head, 1)
-
-childcur <- bs[,c("SEX","WEIGHT","age")]
-test.grpsex1 <- gam.grptest(WEIGHT~s(SEX),test=~SEX,data=childcur)
-test.grpsex1
-plot(test.grpsex1)
-plot(test.grpsex1,test.statistic=TRUE)
-
-childsurf <- bs[,c("SEX","BMI","WEIGHT","age")]
-test.grpsex2 <- gam.grptest(y~s(BMI,WEIGHT),test=~SEX,data=childsurf)
-test.grpsex2
-plot(test.grpsex2)
-plot(test.grpsex2,type="plotly.persp")}
 }
 \seealso{
 \code{\link{gam.grptest}}

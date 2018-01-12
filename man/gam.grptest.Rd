@@ -59,6 +59,7 @@ t1
 plot(t1)
 
 ########
+\dontrun{
 ## Semiparametric test the equality for regression surfaces
 ## Simulate data sets
 
@@ -92,8 +93,26 @@ tspl$p.value #p-value
 plot(tspl, test.statistic = TRUE)
 plot(tspl, type="contour")
 plot(tspl, type="persp")
-plot(tspl, type="plotly.persp")
+plot(tspl, type="plotly.persp")}
 
+########
+## Data analyses with internal "outchild" dataset
+
+data("outchild")
+child<- outchild[order(outchild$SID,outchild$age),]
+bs <- aggregate(.~SID, child, FUN=head, 1)
+
+childcur <- bs[,c("SEX","WEIGHT","age")]
+test.grpsex1 <- gam.grptest(WEIGHT~s(age),test=~SEX,data=childcur)
+test.grpsex1
+plot(test.grpsex1)
+plot(test.grpsex1,test.statistic=TRUE)
+
+childsurf <- bs[,c("SEX","HEIGHT","WEIGHT","age")]
+test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age),test=~SEX,data=childsurf)
+test.grpsex2
+plot(test.grpsex2)
+plot(test.grpsex2,type="plotly.persp")
 }
 \seealso{
 \code{\link[mgcv]{gam}}
