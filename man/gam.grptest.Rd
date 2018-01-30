@@ -54,7 +54,7 @@ data.bind <- rbind(cbind(x1,y1,1), cbind(x2,y2,2))
 data.bind <- data.frame(data.bind)
 colnames(data.bind)=c('x','y','group')
 
-t1 <- gam.grptest(y~s(x,bs="cr"),test=~group,data=data.bind,parallel=FALSE)
+t1 <- gam.grptest(y~s(x,bs="cr"), test=~group, data=data.bind, parallel=FALSE)
 t1
 plot(t1)
 
@@ -88,7 +88,7 @@ data.bind <- rbind(cbind(x11, x12 ,y1,1), cbind(x21, x22, y2,2), cbind(x31, x32,
 data.bind <- data.frame(data.bind)
 colnames(data.bind)=c('x1','x2', 'y','group')
 
-tspl <- gam.grptest(y~s(x1,x2),test=~group,data=data.bind,N.boot=200,m=225,parallel=FALSE)
+tspl <- gam.grptest(y~s(x1,x2), test=~group, data=data.bind, N.boot=200, m=225, parallel=FALSE)
 tspl$p.value #p-value
 plot(tspl, test.statistic = TRUE)
 plot(tspl, type="contour")
@@ -103,13 +103,13 @@ child<- outchild[order(outchild$SID,outchild$age),]
 bs <- aggregate(.~SID, child, FUN=head, 1)
 
 childcur <- bs[,c("SEX","WEIGHT","age")]
-test.grpsex1 <- gam.grptest(WEIGHT~s(age),test=~SEX,data=childcur)
+test.grpsex1 <- gam.grptest(WEIGHT~s(age), test=~SEX, data=childcur)
 test.grpsex1
 plot(test.grpsex1)
 plot(test.grpsex1,test.statistic=TRUE)
 
 childsurf <- bs[,c("SEX","HEIGHT","WEIGHT","age")]
-test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age),test=~SEX,data=childsurf)
+test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age), test=~SEX, data=childsurf)
 test.grpsex2
 plot(test.grpsex2)
 plot(test.grpsex2,type="plotly.persp")
