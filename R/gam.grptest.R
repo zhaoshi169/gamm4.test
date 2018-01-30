@@ -43,7 +43,7 @@ wild.boot <- function(x, nboot=1){
 #'@param m the number of the sampling points for the Monte-Carlo integration.
 #'@param parallel Parallel computation of semiparametric estimations with bootstrap samples for getting test statistics under null hypothesis.
 #'@details A bootstrap algorithm is applied to test the equality of semiparametric curves or surfaces based on L2 distance.
-#'@seealso \code{\link[mgcv]{gam}}
+#'@seealso \code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}}
 #'@import mgcv
 #'@importFrom parallel detectCores makeCluster stopCluster
 #'@importFrom foreach foreach %dopar% %do%
