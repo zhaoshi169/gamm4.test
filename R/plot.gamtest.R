@@ -124,18 +124,17 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
           xl <-x$mydataname[2]
           yl <- x$mydataname[3]
           if (data.pts==TRUE) {invisible(lapply(as.numeric(levels(data.bind$group)),function(x) {
-            mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="contour",xlab=xl,ylab=yl)
+            mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="contour",xlab=xl,ylab=yl,zlim=c(min(data.bind$y),max(data.bind$y)))
             points(data.bind$x1[data.bind$group==x],data.bind$x2[data.bind$group==x])
           }))} #suppress returning of list
           else{
-            invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="contour",xlab=xl,ylab=yl)))
+            invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="contour",xlab=xl,ylab=yl,zlim=c(min(data.bind$y),max(data.bind$y)))))
           }
         }else if(type=="persp"){
           par(mfrow=c(2,ifelse(gn>2,2,1)))
           xl <-x$mydataname[2]
           yl <- x$mydataname[3]
-          invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="persp",xlab=xl,ylab=yl...)))
-          # xlim=c(0,0.2), ylim=c(0,0.6),zlim=c(3,14),
+          invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="persp",xlab=xl,ylab=yl,zlim=c(min(data.bind$y),max(data.bind$y)),...)))
         }
         else if(type=="plotly.persp"){
           u1.min <- max(unlist(lapply(levels(data.bind$group),function(x) min(data.bind$x1[data.bind$group==x]))))
@@ -148,37 +147,48 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
           fit.sub.uv <- matrix(unlist(lapply(fit.sub,function(x) predict(x$gam,data.frame(x1=u1v1[,1],x2=u1v1[,2])))),nrow=n)
           if (data.pts.3d == TRUE) {plotly::plot_ly(data.bind, x = ~x1, y = ~x2, z = ~y, color = ~group) %>% add_markers() }
           if (one.frame==TRUE){
-              p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+            if (x$group==2){
+              p <- plotly::plot_ly(colors=c("red","blue"), x = u1, y = v1, showscale = FALSE)%>%
               plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
                                   zaxis = list(title = x$mydataname[4])))
-            if (x$group==2){
-              p <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface')
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], opacity =0.98, type='surface')
+              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
               p
             }
             else if (x$group==3){
-              p <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface')
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', opacity =0.98)
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', opacity =0.98)
+              p <- plotly::plot_ly(colors=c("red","blue","green"), x = u1, y = v1, showscale = FALSE)%>%
+                plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                            zaxis = list(title = x$mydataname[4])))
+              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
               p
             }
             else if (x$group==4){
-              p <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface')
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', opacity =0.98)
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', opacity =0.98)
-              p <- add_trace(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], type='surface', opacity =0.98)
+              p <- plotly::plot_ly(colors=c("red","blue","green","grey"), x = u1, y = v1, showscale = FALSE)%>%
+                plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                            zaxis = list(title = x$mydataname[4])))
+              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
+              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], surfacecolor=matrix(rep(3,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
               p
             }
           }
         }else if (one.frame==FALSE){
           if (x$group==2){
-            p1 <- add_trace(p, z = ~fit.sub.uv[,1:n],  type='surface', showscale = FALSE)
-            layout(scene = list(zaxis = list(title = "z")))
-            p2 <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', showscale = FALSE)
+            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                          zaxis = list(title = x$mydataname[4])))
+            p1 <- add_surface(p, z = ~fit.sub.uv[,1:n],  showscale = FALSE)
+            p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
             p1
             p2
           }
           else if (x$group==3){
+            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                          zaxis = list(title = x$mydataname[4])))
             p1 <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface', showscale = FALSE)
             p2 <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', showscale = FALSE)
             p3 <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', showscale = FALSE)
@@ -187,6 +197,9 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
             p3
           }
           else if (x$group==4){
+            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                          zaxis = list(title = x$mydataname[4])))
             p1 <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface', showscale = FALSE)
             p2 <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', showscale = FALSE)
             p3 <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', showscale = FALSE)
@@ -275,13 +288,19 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
          }
           }else if (one.frame==FALSE){
             if (x$group==2){
-              p1 <- add_surface(p, z = ~fit.sub.uv[,1:n],  showscale = FALSE)
+              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
+                                    zaxis = list(title = x$mydataname[3])))
+              p1 <- add_surface(p, z = ~fit.sub.uv[,1:n],  showscale = FALSE)%>%
                 layout(scene = list(zaxis = list(title = "z")))
               p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
               p1
               p2
             }
             else if (x$group==3){
+              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
+                                    zaxis = list(title = x$mydataname[3])))
               p1 <- add_surface(p, z = ~fit.sub.uv[,1:n], showscale = FALSE)
               p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
               p3 <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], showscale = FALSE)
@@ -290,6 +309,9 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
               p3
             }
             else if (x$group==4){
+              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
+                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
+                                    zaxis = list(title = x$mydataname[3])))
               p1 <- add_surface(p, z = ~fit.sub.uv[,1:n], showscale = FALSE)
               p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
               p3 <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], showscale = FALSE)
