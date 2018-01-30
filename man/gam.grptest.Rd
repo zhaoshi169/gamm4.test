@@ -115,5 +115,5 @@ plot(test.grpsex2)
 plot(test.grpsex2,type="plotly.persp")
 }
 \seealso{
-\code{\link[mgcv]{gam}}
+\code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}}
 }
