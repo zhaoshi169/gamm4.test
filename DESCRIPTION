@@ -17,5 +17,6 @@ Imports:
     foreach, 
     parallel,
     plotly,
-    Matrix
+    Matrix,
+    RColorBrewer
 

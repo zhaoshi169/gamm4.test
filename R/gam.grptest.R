@@ -20,6 +20,130 @@ wild.boot <- function(x, nboot=1){
     return(x.wb)
   }
 }
+
+interpret.gam0 <- function(gf,textra=NULL)
+  # interprets a gam formula of the generic form:
+  #   y~x0+x1+x3*x4 + s(x5)+ s(x6,x7) ....
+  # and returns:
+  # 1. a model formula for the parametric part: pf (and pfok indicating whether it has terms)
+  # 2. a list of descriptors for the smooths: smooth.spec
+  # this is function does the work, and is called by in interpret.gam
+{ p.env <- environment(gf) # environment of formula
+tf <- terms.formula(gf,specials=c("s","te","ti","t2")) # specials attribute indicates which terms are smooth
+
+terms <- attr(tf,"term.labels") # labels of the model terms 
+nt <- length(terms) # how many terms?
+
+if (attr(tf,"response") > 0) {  # start the replacement formulae
+  response <- as.character(attr(tf,"variables")[2])
+} else { 
+  response <- NULL
+}
+sp <- attr(tf,"specials")$s     # array of indices of smooth terms 
+tp <- attr(tf,"specials")$te    # indices of tensor product terms
+tip <- attr(tf,"specials")$ti   # indices of tensor product pure interaction terms
+t2p <- attr(tf,"specials")$t2   # indices of type 2 tensor product terms
+off <- attr(tf,"offset") # location of offset in formula
+
+## have to translate sp, tp, tip, t2p so that they relate to terms,
+## rather than elements of the formula...
+vtab <- attr(tf,"factors") # cross tabulation of vars to terms
+if (length(sp)>0) for (i in 1:length(sp)) {
+  ind <- (1:nt)[as.logical(vtab[sp[i],])]
+  sp[i] <- ind # the term that smooth relates to
+}
+if (length(tp)>0) for (i in 1:length(tp)) {
+  ind <- (1:nt)[as.logical(vtab[tp[i],])]
+  tp[i] <- ind # the term that smooth relates to
+} 
+if (length(tip)>0) for (i in 1:length(tip)) {
+  ind <- (1:nt)[as.logical(vtab[tip[i],])]
+  tip[i] <- ind # the term that smooth relates to
+} 
+if (length(t2p)>0) for (i in 1:length(t2p)) {
+  ind <- (1:nt)[as.logical(vtab[t2p[i],])]
+  t2p[i] <- ind # the term that smooth relates to
+} ## re-referencing is complete
+
+k <- kt <- kti <- kt2 <- ks <- kp <- 1 # counters for terms in the 2 formulae
+len.sp <- length(sp)
+len.tp <- length(tp)
+len.tip <- length(tip)
+len.t2p <- length(t2p)
+ns <- len.sp + len.tp + len.tip + len.t2p # number of smooths
+pav <- av <- rep("",0)
+smooth.spec <- list()
+mgcvat <- "package:mgcv" %in% search() ## is mgcv in search path?
+if (nt) for (i in 1:nt) { # work through all terms
+  if (k <= ns&&((ks<=len.sp&&sp[ks]==i)||(kt<=len.tp&&tp[kt]==i)||
+                (kti<=len.tip&&tip[kti]==i)||(kt2<=len.t2p&&t2p[kt2]==i))) { # it's a smooth
+    ## have to evaluate in the environment of the formula or you can't find variables 
+    ## supplied as smooth arguments, e.g. k <- 5;gam(y~s(x,k=k)), fails,
+    ## but if you don't specify namespace of mgcv then stuff like 
+    ## loadNamespace('mgcv'); k <- 10; mgcv::interpret.gam(y~s(x,k=k)) fails (can't find s)
+    ## eval(parse(text=terms[i]),envir=p.env,enclos=loadNamespace('mgcv')) fails??
+    ## following may supply namespace of mgcv explicitly if not on search path...
+    if (mgcvat) st <- eval(parse(text=terms[i]),envir=p.env) else {
+      st <- try(eval(parse(text=terms[i]),envir=p.env),silent=TRUE)
+      if (inherits(st,"try-error")) st <- 
+          eval(parse(text=terms[i]),enclos=p.env,envir=loadNamespace('mgcv'))
+    }
+    if (!is.null(textra)) { ## modify the labels on smooths with textra
+      pos <- regexpr("(",st$lab,fixed=TRUE)[1]
+      st$label <- paste(substr(st$label,start=1,stop=pos-1),textra,
+                        substr(st$label,start=pos,stop=nchar(st$label)),sep="")
+    }
+    smooth.spec[[k]] <- st
+    if (ks<=len.sp&&sp[ks]==i) ks <- ks + 1 else # counts s() terms
+      if (kt<=len.tp&&tp[kt]==i) kt <- kt + 1 else # counts te() terms
+        if (kti<=len.tip&&tip[kti]==i) kti <- kti + 1 else # counts ti() terms
+          kt2 <- kt2 + 1                           # counts t2() terms
+    k <- k + 1      # counts smooth terms 
+  } else {          # parametric
+    av[kp] <- terms[i] ## element kp on rhs of parametric
+    kp <- kp+1    # counts parametric terms
+  }
+}    
+if (!is.null(off)) { ## deal with offset 
+  av[kp] <- as.character(attr(tf,"variables")[1+off])
+  kp <- kp+1          
+}
+
+pf <- paste(response,"~",paste(av,collapse=" + "))
+if (attr(tf,"intercept")==0) {
+  pf <- paste(pf,"-1",sep="")
+  if (kp>1) pfok <- 1 else pfok <- 0
+} else { 
+  pfok <- 1;if (kp==1) { 
+    pf <- paste(pf,"1"); 
+  }
+}
+
+fake.formula <- pf
+
+if (length(smooth.spec)>0) 
+  for (i in 1:length(smooth.spec)) {
+    nt <- length(smooth.spec[[i]]$term)
+    ff1 <- paste(smooth.spec[[i]]$term[1:nt],collapse="+")
+    fake.formula <- paste(fake.formula,"+",ff1)
+    if (smooth.spec[[i]]$by!="NA") {
+      fake.formula <- paste(fake.formula,"+",smooth.spec[[i]]$by)
+      av <- c(av,smooth.spec[[i]]$term,smooth.spec[[i]]$by)
+    } else av <- c(av,smooth.spec[[i]]$term)
+  }
+fake.formula <- as.formula(fake.formula,p.env)
+if (length(av)) {
+  pred.formula <- as.formula(paste("~",paste(av,collapse="+")))
+  pav <- all.vars(pred.formula) ## trick to strip out 'offset(x)' etc...
+  pred.formula <- reformulate(pav) 
+} else  pred.formula <- ~1
+ret <- list(pf=as.formula(pf,p.env),pfok=pfok,smooth.spec=smooth.spec,
+            fake.formula=fake.formula,response=response,fake.names=av,
+            pred.names=pav,pred.formula=pred.formula)
+class(ret) <- "split.gam.formula"
+ret
+} ## interpret.gam0
+
 #'Test the equality of nonlinear curves and surface estimations by semiparametric method
 #'
 #'This function tests the equality of nonlinear curves and surface estimations based on L2 distance. The semiparametric estimation
@@ -43,7 +167,7 @@ wild.boot <- function(x, nboot=1){
 #'@param m the number of the sampling points for the Monte-Carlo integration.
 #'@param parallel Parallel computation of semiparametric estimations with bootstrap samples for getting test statistics under null hypothesis.
 #'@details A bootstrap algorithm is applied to test the equality of semiparametric curves or surfaces based on L2 distance.
-#'@seealso \code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}}
+#'@seealso \code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}} \code{\link{T.L2c}}
 #'@import mgcv
 #'@importFrom parallel detectCores makeCluster stopCluster
 #'@importFrom foreach foreach %dopar% %do%
@@ -105,7 +229,8 @@ wild.boot <- function(x, nboot=1){
 #'plot(tspl, test.statistic = TRUE)
 #'plot(tspl, type="contour")
 #'plot(tspl, type="persp")
-#'plot(tspl, type="plotly.persp")}
+#'plot(tspl, type="plotly.persp")
+#'plot(tspl, type="plotly.persp",data.pts=TRUE)}
 #'
 #'########
 #'## Data analyses with internal "outchild" dataset
@@ -124,11 +249,12 @@ wild.boot <- function(x, nboot=1){
 #'test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age), test=~SEX, data=childsurf)
 #'test.grpsex2
 #'plot(test.grpsex2)
-#'plot(test.grpsex2,type="plotly.persp")
+#'plot(test.grpsex2, type="plotly.persp")
+#'plot(test.grpsex2, type="plotly.persp",data.pts=TRUE)
 #'@export
 
 gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
-  gp <-  mgcv:::interpret.gam0(formula) # interpret the formula
+  gp <-  interpret.gam0(formula) # interpret the formula
   test.term <- terms.formula(test)
   data.bind <- data.frame(x=data[,gp$pred.names], y=data[,gp$response],
                           group=as.factor(data[,as.character(attr(test.term,"variables")[[2]])]))
@@ -479,7 +605,7 @@ gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
 T.L2c <- function(formula,test,data,N.boot=200,degree=1, criterion=c("aicc", "gcv"),
                   family = c("gaussian", "symmetric"), m=225, user.span=NULL, ...){
   data.bind <- data[complete.cases(data),]
-  gp <-  mgcv:::interpret.gam0(formula)
+  gp <-  interpret.gam0(formula)
   x <- data.bind[,gp$pred.names]
   y <- data.bind[,gp$response]
   test.term <- terms.formula(test)

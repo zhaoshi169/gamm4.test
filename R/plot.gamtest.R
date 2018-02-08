@@ -11,13 +11,11 @@
 #'@param se.est If TRUE, plot the pointwise 95\% confidence intervals of curves; if FALSE, don't plot the pointwise confidence intervals.
 #'@param type Only used for ploting surfaces. If "type=contour",then contour plot from vis.gam function in mgcv package; if "type=persp", then plot persp from vis.gam function;
 #'if "type=plotly.persp", then plot persp from plotly package.
-#'@param data.pts Only used for curve plotting. If TRUE, plot raw data points. If FALSE, only plot estimated curves/surfaces.
-#'@param one.frame Only used when "type=plotly.persp". If "one.frame=TRUE", plot surface estimations in one frame; otherwise, in separate frames.
-#'@param data.pts.3d If TRUE, plot 3D scatterplot by group using "plotly" package.
+#'@param data.pts If TRUE, plot raw data points. If FALSE, only plot estimated curves/surfaces.
 #'@param ... Other options from package ``mgcv'' ``vis.gam()'' function.
 #'@details This function is to plot a gamtest object. If "test.statistic=TRUE", a density plot of the test statistic under null hypothesis will be generated;
 #'if "test.statistic=FALSE", the estimated curves/surfaces for all groups are drawn.
-#'@seealso \code{\link[mgcv]{gam}}
+#'@seealso \code{\link[mgcv]{gam}} \code{\link[gamm4]{gamm4}} \code{\link{gamm4.grptest}} \code{\link{gam.grptest}} 
 #'@examples
 #'n1 <- 200
 #'x1 <- runif(n1,min=0, max=3)
@@ -74,13 +72,16 @@
 #'plot(tspl)
 #'plot(tspl,test.statistic = TRUE)
 #'plot(tspl,type="plotly.persp")
+#'plot(tspl,type="plotly.persp", data.pts=TRUE)
 #'
 #'@importFrom mgcv vis.gam
 #'@importFrom plotly plot_ly add_surface add_trace %>% add_markers layout
 #'@importFrom graphics hist legend matplot points par plot
+#'@importFrom RColorBrewer brewer.pal
 #'@import stats
 #'@export
-plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main="", n=256, legend.position="topright", se.est=FALSE, data.pts=FALSE, type="contour",one.frame=TRUE, data.pts.3d=FALSE,...){
+
+plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main="", n=256, legend.position="topright", se.est=FALSE, data.pts=FALSE, type="contour", ...){
   if (test.statistic) {
     par(mfrow=c(1,1))
     if (test.stat.type=="density"){
@@ -137,80 +138,58 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
           invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]]$gam,plot.type="persp",xlab=xl,ylab=yl,zlim=c(min(data.bind$y),max(data.bind$y)),...)))
         }
         else if(type=="plotly.persp"){
+          ## colors for pallete
+          if (length(levels(data.bind$group)) <= 2)
+          {
+            myCols <- c('red', 'blue')
+          } else {
+            myCols <- RColorBrewer::brewer.pal(length(levels(data.bind$group)), "RdBu")
+          }
+          baseDatStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t,]})
+          xPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "x1"]})
+          yPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "x2"]})
+          zPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "y"]})
+          
           u1.min <- max(unlist(lapply(levels(data.bind$group),function(x) min(data.bind$x1[data.bind$group==x]))))
           u1.max <- min(unlist(lapply(levels(data.bind$group),function(x) max(data.bind$x1[data.bind$group==x]))))
           u1 <- seq(from=u1.min, to=u1.max,length.out=n)
           v1.min <- max(unlist(lapply(levels(data.bind$group),function(x) min(data.bind$x2[data.bind$group==x]))))
           v1.max <- min(unlist(lapply(levels(data.bind$group),function(x) max(data.bind$x2[data.bind$group==x]))))
           v1 <- seq(from=v1.min, to=v1.max,length.out=n)
-          u1v1 <- expand.grid(u1,v1)
-          fit.sub.uv <- matrix(unlist(lapply(fit.sub,function(x) predict(x$gam,data.frame(x1=u1v1[,1],x2=u1v1[,2])))),nrow=n)
-          if (data.pts.3d == TRUE) {plotly::plot_ly(data.bind, x = ~x1, y = ~x2, z = ~y, color = ~group) %>% add_markers() }
-          if (one.frame==TRUE){
-            if (x$group==2){
-              p <- plotly::plot_ly(colors=c("red","blue"), x = u1, y = v1, showscale = FALSE)%>%
-              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                  zaxis = list(title = x$mydataname[4])))
-              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p
+          
+          ## fill in zVals matrix
+          zVals <- lapply(fit.sub, function(t) {
+            zVals <- matrix(0, nrow = n, ncol = n)
+            for (i in 1:n)
+            {
+              newdat <- data.frame(x = u1[i], y = v1)
+              names(newdat) <- c("x1", "x2")
+              zVals[,i] <- predict(t$gam, newdata = newdat)
             }
-            else if (x$group==3){
-              p <- plotly::plot_ly(colors=c("red","blue","green"), x = u1, y = v1, showscale = FALSE)%>%
-                plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                            zaxis = list(title = x$mydataname[4])))
-              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p
-            }
-            else if (x$group==4){
-              p <- plotly::plot_ly(colors=c("red","blue","green","grey"), x = u1, y = v1, showscale = FALSE)%>%
-                plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                            zaxis = list(title = x$mydataname[4])))
-              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], surfacecolor=matrix(rep(3,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p
+            return(zVals)
+          })
+          
+          ####combine groups
+          scatPlot <- plot_ly() %>%
+            layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+                                zaxis = list(title = x$mydataname[4])))
+          if (data.pts == TRUE) {
+            for (i in 1:length(levels(data.bind$group)))
+            {
+              scatPlot <- scatPlot %>% add_markers(x = xPtsStrat[[i]], y = yPtsStrat[[i]], 
+                                                   z = zPtsStrat[[i]], marker = list(color = myCols[i]),
+                                                   name = levels(data.bind$group)[i]) 
             }
           }
-        }else if (one.frame==FALSE){
-          if (x$group==2){
-            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                          zaxis = list(title = x$mydataname[4])))
-            p1 <- add_surface(p, z = ~fit.sub.uv[,1:n],  showscale = FALSE)
-            p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
-            p1
-            p2
+          for (i in 1:length(zVals))
+          {
+            scatPlot <- scatPlot %>% add_surface(x = u1, y = v1, z = zVals[[i]], 
+                                                 surfacecolor = matrix(rep((i-1), n*2), nrow = n, ncol = n),
+                                                 cmax = (x$group-1), cmin = 0, showscale = F, colorscale = list(c(0,1), c(myCols[i], myCols[i])))
           }
-          else if (x$group==3){
-            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                          zaxis = list(title = x$mydataname[4])))
-            p1 <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface', showscale = FALSE)
-            p2 <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', showscale = FALSE)
-            p3 <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', showscale = FALSE)
-            p1
-            p2
-            p3
-          }
-          else if (x$group==4){
-            p <- plotly::plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-              plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
-                                          zaxis = list(title = x$mydataname[4])))
-            p1 <- add_trace(p, z = ~fit.sub.uv[,1:n], type='surface', showscale = FALSE)
-            p2 <- add_trace(p, z = ~fit.sub.uv[,(1+n):(n*2)], type='surface', showscale = FALSE)
-            p3 <- add_trace(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], type='surface', showscale = FALSE)
-            p4 <- add_trace(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], type='surface', showscale = FALSE)
-            p1
-            p2
-            p3
-            p4
-          }
+          scatPlot
         }
-      }
+        }
     } else if (x$fcn=="gam.grptest"){
       if (ncol(x$data)==3) {
    # if (type %in% c("contour","persp","plotly.persp")) stop(paste(type,"is only used for surface comparisons!"))
@@ -249,79 +228,57 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
           invisible(lapply(as.numeric(levels(data.bind$group)),function(x) mgcv::vis.gam(fit.sub[[x]],plot.type="persp",xlab=xl,ylab=yl,zlim=c(min(data.bind$y),max(data.bind$y)),...)))
         }
         else if(type=="plotly.persp"){
+          ## colors for pallete
+          if (length(levels(data.bind$group)) <= 2)
+          {
+            myCols <- c('red', 'blue')
+          } else {
+            myCols <- RColorBrewer::brewer.pal(length(levels(data.bind$group)), "RdBu")
+          }
+          baseDatStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t,]})
+          xPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "x1"]})
+          yPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "x2"]})
+          zPtsStrat <- lapply(levels(data.bind$group), function(t) {data.bind[data.bind[,"group"] == t, "y"]})
+          
           u1.min <- max(unlist(lapply(levels(data.bind$group),function(x) min(data.bind$x1[data.bind$group==x]))))
           u1.max <- min(unlist(lapply(levels(data.bind$group),function(x) max(data.bind$x1[data.bind$group==x]))))
           u1 <- seq(from=u1.min, to=u1.max,length.out=n)
           v1.min <- max(unlist(lapply(levels(data.bind$group),function(x) min(data.bind$x2[data.bind$group==x]))))
           v1.max <- min(unlist(lapply(levels(data.bind$group),function(x) max(data.bind$x2[data.bind$group==x]))))
           v1 <- seq(from=v1.min, to=v1.max,length.out=n)
-          u1v1 <- expand.grid(u1,v1)
-          fit.sub.uv <- matrix(unlist(lapply(fit.sub,function(x) predict(x,data.frame(x1=u1v1[,1],x2=u1v1[,2])))),nrow=n)
-          if (one.frame==TRUE){
-            if (x$group==2){
-              p <- plot_ly(colors=c("red","blue"),x = u1, y = v1, showscale = FALSE)%>%
-                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                    zaxis = list(title = x$mydataname[3])))
-              p <- add_surface(p, z = ~fit.sub.uv[,1:n],surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-             p
+         
+          ## fill in zVals matrix
+          zVals <- lapply(fit.sub, function(t) {
+            zVals <- matrix(0, nrow = n, ncol = n)
+            for (i in 1:n)
+            {
+              newdat <- data.frame(x = u1[i], y = v1)
+              names(newdat) <- c("x1", "x2")
+              zVals[,i] <- predict(t, newdata = newdat)
             }
-             else if (x$group==3){
-               p <- plot_ly(colors=c("red","blue","green"),x = u1, y = v1, showscale = FALSE)%>%
-                 layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                     zaxis = list(title = x$mydataname[3])))
-               p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-               p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-               p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-               p
-             }
-            else if (x$group==4){
-              p <- plot_ly(colors=c("red","blue","green","grey"),x = u1, y = v1, showscale = FALSE)%>%
-                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                    zaxis = list(title = x$mydataname[3])))
-              p <- add_surface(p, z = ~fit.sub.uv[,1:n], surfacecolor=matrix(rep(0,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], surfacecolor=matrix(rep(1,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], surfacecolor=matrix(rep(2,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p <- add_surface(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], surfacecolor=matrix(rep(3,n*2),nrow=n,ncol=n),cauto=F,cmax=(x$group-1),cmin=0,showscale=F)
-              p
+            return(zVals)
+          })
+          
+            ####combine groups
+            scatPlot <- plot_ly() %>%
+              layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
+                                  zaxis = list(title = x$mydataname[3])))
+            if (data.pts == TRUE) {
+              for (i in 1:length(levels(data.bind$group)))
+            {
+              scatPlot <- scatPlot %>% add_markers(x = xPtsStrat[[i]], y = yPtsStrat[[i]], 
+                                                   z = zPtsStrat[[i]], marker = list(color = myCols[i]),
+                                                   name = levels(data.bind$group)[i]) 
+              }
             }
+            for (i in 1:length(zVals))
+            {
+              scatPlot <- scatPlot %>% add_surface(x = u1, y = v1, z = zVals[[i]], 
+                                                   surfacecolor = matrix(rep((i-1), n*2), nrow = n, ncol = n),
+                                                   cmax = (x$group-1), cmin = 0, showscale = F, colorscale = list(c(0,1), c(myCols[i], myCols[i])))
+            }
+            scatPlot
          }
-          }else if (one.frame==FALSE){
-            if (x$group==2){
-              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                    zaxis = list(title = x$mydataname[3])))
-              p1 <- add_surface(p, z = ~fit.sub.uv[,1:n],  showscale = FALSE)%>%
-                layout(scene = list(zaxis = list(title = "z")))
-              p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
-              p1
-              p2
-            }
-            else if (x$group==3){
-              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                    zaxis = list(title = x$mydataname[3])))
-              p1 <- add_surface(p, z = ~fit.sub.uv[,1:n], showscale = FALSE)
-              p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
-              p3 <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], showscale = FALSE)
-              p1
-              p2
-              p3
-            }
-            else if (x$group==4){
-              p <- plot_ly(x = u1, y = v1, showscale = FALSE)%>%
-                layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
-                                    zaxis = list(title = x$mydataname[3])))
-              p1 <- add_surface(p, z = ~fit.sub.uv[,1:n], showscale = FALSE)
-              p2 <- add_surface(p, z = ~fit.sub.uv[,(1+n):(n*2)], showscale = FALSE)
-              p3 <- add_surface(p, z = ~fit.sub.uv[,(1+n*2):(n*3)], showscale = FALSE)
-              p4 <- add_surface(p, z = ~fit.sub.uv[,(1+n*3):(n*4)], showscale = FALSE)
-              p1
-              p2
-              p3
-              p4
-            }
-          }
         }
       }
     }

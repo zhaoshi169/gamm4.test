@@ -7,7 +7,7 @@
 \method{plot}{gamtest}(x, test.statistic = FALSE,
   test.stat.type = "density", main = "", n = 256,
   legend.position = "topright", se.est = FALSE, data.pts = FALSE,
-  type = "contour", one.frame = TRUE, data.pts.3d = FALSE, ...)
+  type = "contour", ...)
 }
 \arguments{
 \item{x}{A gamtest object.}
@@ -24,14 +24,10 @@
 
 \item{se.est}{If TRUE, plot the pointwise 95\% confidence intervals of curves; if FALSE, don't plot the pointwise confidence intervals.}
 
-\item{data.pts}{Only used for curve plotting. If TRUE, plot raw data points. If FALSE, only plot estimated curves/surfaces.}
+\item{data.pts}{If TRUE, plot raw data points. If FALSE, only plot estimated curves/surfaces.}
 
 \item{type}{Only used for ploting surfaces. If "type=contour",then contour plot from vis.gam function in mgcv package; if "type=persp", then plot persp from vis.gam function;
 if "type=plotly.persp", then plot persp from plotly package.}
-
-\item{one.frame}{Only used when "type=plotly.persp". If "one.frame=TRUE", plot surface estimations in one frame; otherwise, in separate frames.}
-
-\item{data.pts.3d}{If TRUE, plot 3D scatterplot by group using "plotly" package.}
 
 \item{...}{Other options from package ``mgcv'' ``vis.gam()'' function.}
 }
@@ -101,5 +97,5 @@ plot(tspl,type="plotly.persp")
 
 }
 \seealso{
-\code{\link[mgcv]{gam}}
+\code{\link[mgcv]{gam}} \code{\link[gamm4]{gamm4}} \code{\link{gamm4.grptest}} \code{\link{gam.grptest}}
 }

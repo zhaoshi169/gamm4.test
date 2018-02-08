@@ -42,7 +42,7 @@ A bootstrap algorithm is applied to test the equality of semiparametric curves o
 }
 \examples{
 \dontrun{
-#Test the equality of two nonlinear curves
+#Test the equality of three nonlinear curves
 m1 <- 120 #number of subjects in group 1
 m2 <- 100 #number of subjects in group 2
 m3 <- 110 #number of subjects in group 3

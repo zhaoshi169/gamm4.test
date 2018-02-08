@@ -93,7 +93,8 @@ tspl$p.value #p-value
 plot(tspl, test.statistic = TRUE)
 plot(tspl, type="contour")
 plot(tspl, type="persp")
-plot(tspl, type="plotly.persp")}
+plot(tspl, type="plotly.persp")
+plot(tspl,type="plotly.persp",data.pts=TRUE)}
 
 ########
 ## Data analyses with internal "outchild" dataset
@@ -113,7 +114,8 @@ test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age), test=~SEX, data=childsurf)
 test.grpsex2
 plot(test.grpsex2)
 plot(test.grpsex2,type="plotly.persp")
+plot(test.grpsex2,type="plotly.persp",data.pts=TRUE)
 }
 \seealso{
-\code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}}
+\code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}} \code{\link{T.L2c}}
 }
