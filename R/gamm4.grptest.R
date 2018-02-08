@@ -418,11 +418,13 @@ gamm4.grptest <- function(formula,random,test,data,N.boot=200,m=225,parallel=TRU
     }
   }else{
     apply.T.spline.boot1<-function(y.boot,T.spline.boot1,N.boot){
+      y.boot.col <- i <- NULL
       foreach(y.boot.col=iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), .export=c("x","id","group","g","u","m","pwdiff","smooth.class","knots.s")) %dopar% {
         foreach(i = 1:ncol(y.boot.col)) %do% T.spline.boot1(array(y.boot.col[,i]),knots.s)
       }
     }
     apply.T.spline.boot2<-function(y.boot,T.spline.boot2,N.boot){
+      y.boot.col <- i <- NULL
       foreach(y.boot.col=iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), .export=c("x","id","group","g","u1","v1","m","pwdiff","smooth.class","knots.s")) %dopar% {
         foreach(i = 1:ncol(y.boot.col)) %do% T.spline.boot2(array(y.boot.col[,i]),knots.s)
       }

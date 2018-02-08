@@ -492,12 +492,16 @@ gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
       obj
     }
     apply.T.spline.boot1 <- function(y.boot, T.spline.boot1, N.boot){
-      foreach(y.boot.col = iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), .export=c("x","group","g","u","m","pwdiff","smooth.class","knots.s")) %dopar% {
+      y.boot.col <- i <- NULL
+      foreach(y.boot.col = iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), 
+              .export=c("x","group","g","u","m","pwdiff","smooth.class","knots.s")) %dopar% {
         foreach(i = 1:ncol(y.boot.col)) %do% T.spline.boot1(array(y.boot.col[,i]),knots.s)
       }
     }
     apply.T.spline.boot2 <- function(y.boot, T.spline.boot2, N.boot){
-      foreach(y.boot.col = iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), .export=c("x","group","g","u1","v1","m","pwdiff","smooth.class","knots.s")) %dopar% {
+      y.boot.col <- i <- NULL
+      foreach(y.boot.col = iblkcol(y.boot), .combine="c", .packages=c("foreach","gamm4"), 
+              .export=c("x","group","g","u1","v1","m","pwdiff","smooth.class","knots.s")) %dopar% {
         foreach(i = 1:ncol(y.boot.col)) %do% T.spline.boot2(array(y.boot.col[,i]),knots.s)
       }
     }
