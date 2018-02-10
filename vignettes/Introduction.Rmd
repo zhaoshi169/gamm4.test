@@ -1,0 +1,24 @@
+---
+title: "Package 'gamm4.test' in R"
+author: "Shi Zhao"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Package "gamm4.test" in R
+
+gamm4.test is a package supplied with R for testing nonlinear curve and surface functions.The main testing routine is gam.test.
+
+## Documentation
+
+The major advantages of this packages are:
+
+- Arguements formulated are consistent with semiparametric regression estimating package "mgcv" and "gamm4", so that people who are familiar with these ones can easily adopt our major function `gam.grptest()`.
+
+- We allow parallel computing by specifying `parallel = TRUE` within function `gam.grptest` to save computational time if needed.
+
+- `plot.gamtest()` function plots semiparametric estimated nonlinear curves and surfaces via R package "plotly". Option `type=plotly.persp` provides a 3-D interactive plot with estimated regression functions for individual groups. Also, `test.statistic = TRUE` provides the empirical distribution of the test statistic under the null hypothesis of equal regression function.

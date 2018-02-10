@@ -41,7 +41,7 @@ The problem can also be viewed as the test of the equality in the one-sample pro
 A bootstrap algorithm is applied to test the equality of semiparametric curves or surfaces based on L2 distance.
 }
 \examples{
-\dontrun{
+\donttest{
 #Test the equality of three nonlinear curves
 m1 <- 120 #number of subjects in group 1
 m2 <- 100 #number of subjects in group 2
@@ -80,14 +80,14 @@ y3 <- f3(x31) + b3 + rnorm(N3,0,sigma.noise2)
 dat <- data.frame(rbind(cbind(id1, x11,y1,1), cbind(id2, x21, y2,2), cbind(id3, x31, y3,3)))
 colnames(dat)=c('id','x', 'y','grp')
 testout <- gamm4.grptest(formula=y~s(x,k=6,bs="cr"), test=~grp,
-                        random=~(1|id), data=dat, N.boot=200, m=225, parallel = FALSE)
+                        random=~(1|id), data=dat, N.boot=200, m=225, parallel = TRUE)
 testout
 plot(testout)
 
 dat0 <- data.frame(rbind(cbind(id3, x31, y3, 3), cbind(id2, x21, y2, 2)))
 colnames(dat0)=c('id', 'x', 'y', 'grp')
 testout0 <- gamm4.grptest(formula=y~s(x,k=6,bs="cr"), test=~grp,
-       random=~(1|id), data=dat0, N.boot=200, m=225, parallel= FALSE)
+       random=~(1|id), data=dat0, N.boot=200, m=225, parallel= TRUE)
 testout0$p.value
 plot(testout0, test.statistic = TRUE)
 
@@ -127,15 +127,16 @@ dat <- data.frame(rbind(cbind(id1, x11, x12,y1,1), cbind(id2, x21, x22, y2,2)))
 colnames(dat)=c('id','x1','x2', 'y','grp')
 
 test.spline1 <- gamm4.grptest(formula=y~t2(x1,x2), test=~grp,
-               random=~(1|id), data=dat, N.boot=200, m=225, parallel=FALSE)
+               random=~(1|id), data=dat, N.boot=200, m=225, parallel=TRUE)
 plot(test.spline1)
 plot(test.spline1, type="plotly.persp")
+plot(test.spline1, type="plotly.persp", data.pts=TRUE)
 
 dat0 <- data.frame(rbind(cbind(id1, x11, x12 , y1, 1), cbind(id2, x21, x22, y3, 2)))
 colnames(dat0)=c('id','x1','x2', 'y','grp')
 
 test.spline0 <- gamm4.grptest(y~t2(x1,x2), test=~grp,
-               random=~(1|id), data=dat0, N.boot=200, m=225, parallel=FALSE)
+               random=~(1|id), data=dat0, N.boot=200, m=225, parallel=TRUE)
 test.spline0
 plot(test.spline0, test.statistic = FALSE)
 plot(test.spline0)
@@ -148,13 +149,13 @@ data("outchild")
 outchild1016 <- outchild[(outchild$age<=16 & outchild$age>10),]
 child.repw <- outchild1016[(outchild1016$RACE==1),]
 child.reptest1 <- gamm4.grptest(HEIGHT~s(age), random=~(1|SID), 
-                               test=~SEX, data=child.repw, parallel = FALSE)
+                               test=~SEX, data=child.repw, parallel = TRUE)
 child.reptest1
 plot(child.reptest1)
 plot(child.reptest1,test.statistic = FALSE)
 
 child.reptest2 <- gamm4.grptest(WEIGHT~t2(age,HEIGHT), random=~(1|SID), 
-                              test=~SEX, data = child.repw, parallel = FALSE)
+                              test=~SEX, data = child.repw, parallel = TRUE)
 plot(child.reptest2,type="plotly.persp")
 plot(child.reptest2,type="contour")}
 }

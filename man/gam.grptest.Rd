@@ -38,6 +38,28 @@ The problem can also be viewed as the test of the equality in the one-sample pro
 A bootstrap algorithm is applied to test the equality of semiparametric curves or surfaces based on L2 distance.
 }
 \examples{
+\dontshow{
+n1 <- 30
+x1 <- runif(n1,min=0, max=3)
+sd1 <- 0.2
+e1 <- rnorm(n1,sd=sd1)
+y1 <- sin(2*x1) + cos(2*x1) + e1
+
+n2 <- 30
+x2 <- runif(n2, min=0, max=3)
+sd2 <- 0.25
+e2 <- rnorm(n2, sd=sd2)
+y2 <- sin(2*x2) + cos(2*x2) + x2 + e2
+
+data.bind <- rbind(cbind(x1,y1,1), cbind(x2,y2,2))
+data.bind <- data.frame(data.bind)
+colnames(data.bind)=c('x','y','group')
+
+t1 <- gam.grptest(y~s(x,bs="cr"), test=~group, data=data.bind, parallel=FALSE)
+t1
+plot(t1)}
+
+\donttest{
 n1 <- 200
 x1 <- runif(n1,min=0, max=3)
 sd1 <- 0.2
@@ -59,7 +81,6 @@ t1
 plot(t1)
 
 ########
-\dontrun{
 ## Semiparametric test the equality for regression surfaces
 ## Simulate data sets
 
@@ -94,7 +115,7 @@ plot(tspl, test.statistic = TRUE)
 plot(tspl, type="contour")
 plot(tspl, type="persp")
 plot(tspl, type="plotly.persp")
-plot(tspl,type="plotly.persp",data.pts=TRUE)}
+plot(tspl, type="plotly.persp",data.pts=TRUE)
 
 ########
 ## Data analyses with internal "outchild" dataset
@@ -113,8 +134,8 @@ childsurf <- bs[,c("SEX","HEIGHT","WEIGHT","age")]
 test.grpsex2 <- gam.grptest(WEIGHT~s(HEIGHT,age), test=~SEX, data=childsurf)
 test.grpsex2
 plot(test.grpsex2)
-plot(test.grpsex2,type="plotly.persp")
-plot(test.grpsex2,type="plotly.persp",data.pts=TRUE)
+plot(test.grpsex2, type="plotly.persp")
+plot(test.grpsex2, type="plotly.persp",data.pts=TRUE)}
 }
 \seealso{
 \code{\link[mgcv]{gam}} \code{\link{gamm4.grptest}} \code{\link{plot.gamtest}} \code{\link{T.L2c}}

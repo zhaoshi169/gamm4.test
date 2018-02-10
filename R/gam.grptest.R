@@ -171,9 +171,31 @@ ret
 #'@import mgcv
 #'@importFrom parallel detectCores makeCluster stopCluster
 #'@importFrom foreach foreach %dopar% %do%
-#'@importFrom doSNOW registerDoSNOW
+#'@importFrom doParallel registerDoParallel
 #'@import stats
 #'@examples
+#'\dontshow{
+#'n1 <- 30
+#'x1 <- runif(n1,min=0, max=3)
+#'sd1 <- 0.2
+#'e1 <- rnorm(n1,sd=sd1)
+#'y1 <- sin(2*x1) + cos(2*x1) + e1
+#'
+#'n2 <- 30
+#'x2 <- runif(n2, min=0, max=3)
+#'sd2 <- 0.25
+#'e2 <- rnorm(n2, sd=sd2)
+#'y2 <- sin(2*x2) + cos(2*x2) + x2 + e2
+#'
+#'data.bind <- rbind(cbind(x1,y1,1), cbind(x2,y2,2))
+#'data.bind <- data.frame(data.bind)
+#'colnames(data.bind)=c('x','y','group')
+#'
+#'t1 <- gam.grptest(y~s(x,bs="cr"), test=~group, data=data.bind, parallel=FALSE)
+#'t1
+#'plot(t1)}
+#'
+#'\donttest{
 #'n1 <- 200
 #'x1 <- runif(n1,min=0, max=3)
 #'sd1 <- 0.2
@@ -195,7 +217,6 @@ ret
 #'plot(t1)
 #'
 #'########
-#'\dontrun{
 #'## Semiparametric test the equality for regression surfaces
 #'## Simulate data sets
 #'
@@ -230,7 +251,7 @@ ret
 #'plot(tspl, type="contour")
 #'plot(tspl, type="persp")
 #'plot(tspl, type="plotly.persp")
-#'plot(tspl, type="plotly.persp",data.pts=TRUE)}
+#'plot(tspl, type="plotly.persp",data.pts=TRUE)
 #'
 #'########
 #'## Data analyses with internal "outchild" dataset
@@ -250,7 +271,7 @@ ret
 #'test.grpsex2
 #'plot(test.grpsex2)
 #'plot(test.grpsex2, type="plotly.persp")
-#'plot(test.grpsex2, type="plotly.persp",data.pts=TRUE)
+#'plot(test.grpsex2, type="plotly.persp",data.pts=TRUE)}
 #'@export
 
 gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
@@ -506,7 +527,7 @@ gam.grptest <- function(formula,test,data,N.boot=200,m=225,parallel=FALSE) {
       }
     }
     myCl <- makeCluster(detectCores()-1)
-    registerDoSNOW(myCl)
+    registerDoParallel(myCl)
 
     if (ncol(x)==1) {
       T.spline.boot <- apply.T.spline.boot1(y.boot, T.spline.boot1, N.boot)

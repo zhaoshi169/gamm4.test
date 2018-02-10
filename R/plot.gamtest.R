@@ -17,6 +17,27 @@
 #'if "test.statistic=FALSE", the estimated curves/surfaces for all groups are drawn.
 #'@seealso \code{\link[mgcv]{gam}} \code{\link[gamm4]{gamm4}} \code{\link{gamm4.grptest}} \code{\link{gam.grptest}} 
 #'@examples
+#'\dontshow{
+#'n1 <- 30
+#'x1 <- runif(n1,min=0, max=3)
+#'sd1 <- 0.2
+#'e1 <- rnorm(n1,sd=sd1)
+#'y1 <- sin(2*x1) + cos(2*x1) + e1
+#'
+#'n2 <- 30
+#'x2 <- runif(n2, min=0, max=3)
+#'sd2 <- 0.25
+#'e2 <- rnorm(n2, sd=sd2)
+#'y2 <- sin(2*x2) + cos(2*x2) + x2 + e2
+#'
+#'data.bind <- rbind(cbind(x1,y1,1), cbind(x2,y2,2))
+#'data.bind <- data.frame(data.bind)
+#'colnames(data.bind)=c('x','y','group')
+#'
+#'t1 <- gam.grptest(y~s(x,bs="cr"), test=~group, data=data.bind, parallel=FALSE)
+#'t1
+#'plot(t1)}
+#'\donttest{
 #'n1 <- 200
 #'x1 <- runif(n1,min=0, max=3)
 #'sd1 <- 0.2
@@ -72,7 +93,7 @@
 #'plot(tspl)
 #'plot(tspl,test.statistic = TRUE)
 #'plot(tspl,type="plotly.persp")
-#'plot(tspl,type="plotly.persp", data.pts=TRUE)
+#'plot(tspl,type="plotly.persp", data.pts=TRUE)}
 #'
 #'@importFrom mgcv vis.gam
 #'@importFrom plotly plot_ly add_surface add_trace %>% add_markers layout

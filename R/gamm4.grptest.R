@@ -25,12 +25,12 @@
 #'@importFrom gamm4 gamm4
 #'@importFrom parallel detectCores makeCluster stopCluster
 #'@importFrom foreach foreach %dopar% %do%
-#'@importFrom doSNOW registerDoSNOW
+#'@importFrom doParallel registerDoParallel
 #'@import mgcv
 #'@import stats
 #'@importFrom Matrix bdiag
 #'@examples
-#'\dontrun{
+#'\donttest{
 #'#Test the equality of three nonlinear curves
 #'m1 <- 120 #number of subjects in group 1
 #'m2 <- 100 #number of subjects in group 2
@@ -449,7 +449,7 @@ gamm4.grptest <- function(formula,random,test,data,N.boot=200,m=225,parallel=TRU
       obj
     }
     myCl <- makeCluster(detectCores()-1)
-    doSNOW::registerDoSNOW(myCl)
+    registerDoParallel(myCl)
     
     if (ncol(x)==1) {
       T.spline.boot <- apply.T.spline.boot1(y.boot, T.spline.boot1,N.boot)
