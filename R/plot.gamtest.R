@@ -180,19 +180,28 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
           
           ## fill in zVals matrix
           zVals <- lapply(fit.sub, function(t) {
-            zVals <- matrix(0, nrow = n, ncol = n)
-            for (i in 1:n)
-            {
-              newdat <- data.frame(x = u1[i], y = v1)
-              names(newdat) <- c("x1", "x2")
-              zVals[,i] <- predict(t$gam, newdata = newdat)
-            }
+            ## make a LONG dataframe, create predictions THEN make a matrix bycolumn (as done before)
+            ## only one call to predict, no loop - should be faster
+            newdat <- data.frame(x = rep(u1, each = length(v1)), y = rep(v1, length(v1)))
+            names(newdat) <- c("x1", "x2")
+            zValsLong <- predict(t, newdata = newdat)
+            zVals <- matrix(zValsLong, nrow = n, ncol = n)
             return(zVals)
           })
+          # zVals <- lapply(fit.sub, function(t) {
+          #   zVals <- matrix(0, nrow = n, ncol = n)
+          #   for (i in 1:n)
+          #   {
+          #     newdat <- data.frame(x = u1[i], y = v1)
+          #     names(newdat) <- c("x1", "x2")
+          #     zVals[,i] <- predict(t$gam, newdata = newdat)
+          #   }
+          #   return(zVals)
+          # })
           
           ####combine groups
           scatPlot <- plot_ly() %>%
-            layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
+            plotly::layout(scene = list(xaxis = list(title = x$mydataname[2]), yaxis = list(title = x$mydataname[3]),
                                 zaxis = list(title = x$mydataname[4])))
           if (data.pts == TRUE) {
             for (i in 1:length(levels(data.bind$group)))
@@ -270,19 +279,28 @@ plot.gamtest <- function(x, test.statistic=FALSE, test.stat.type="density", main
          
           ## fill in zVals matrix
           zVals <- lapply(fit.sub, function(t) {
-            zVals <- matrix(0, nrow = n, ncol = n)
-            for (i in 1:n)
-            {
-              newdat <- data.frame(x = u1[i], y = v1)
-              names(newdat) <- c("x1", "x2")
-              zVals[,i] <- predict(t, newdata = newdat)
-            }
+            ## make a LONG dataframe, create predictions THEN make a matrix bycolumn (as done before)
+            ## only one call to predict, no loop - should be faster
+            newdat <- data.frame(x = rep(u1, each = length(v1)), y = rep(v1, length(v1)))
+            names(newdat) <- c("x1", "x2")
+            zValsLong <- predict(t, newdata = newdat)
+            zVals <- matrix(zValsLong, nrow = n, ncol = n)
             return(zVals)
           })
+          # zVals <- lapply(fit.sub, function(t) {
+          #   zVals <- matrix(0, nrow = n, ncol = n)
+          #   for (i in 1:n)
+          #   {
+          #     newdat <- data.frame(x = u1[i], y = v1)
+          #     names(newdat) <- c("x1", "x2")
+          #     zVals[,i] <- predict(t, newdata = newdat)
+          #   }
+          #   return(zVals)
+          # })
           
             ####combine groups
             scatPlot <- plot_ly() %>%
-              layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
+              plotly::layout(scene = list(xaxis = list(title = x$mydataname[1]), yaxis = list(title = x$mydataname[2]),
                                   zaxis = list(title = x$mydataname[3])))
             if (data.pts == TRUE) {
               for (i in 1:length(levels(data.bind$group)))
